@@ -13,12 +13,16 @@ import { Registry } from "./registry.ts";
 import { isProvider, isClassProvider, isFactoryProvider, isTokenProvider, isValueProvider } from './provider.ts';
 import { ERROR_MESSAGE } from './error-message.ts';
 import { LIFETIME } from './interfaces/lifetime.ts';
+import { isNormalToken, isConstructorToken } from './token.ts';
 
 type ParamInfo = Token<any>
 
 export const typeInfo = new WeakMap<Constructor<any>, ParamInfo[]>();
 
 export class InternalContainer implements Container {
+    static global() {
+        throw new Error("Method not implemented.");
+    }
     private _parent?: InternalContainer;
     private _disposed = false;
 
@@ -31,21 +35,22 @@ export class InternalContainer implements Container {
         parent?: InternalContainer,
     ) {
         this.registry = new Registry();
-        if (!InternalContainer._global) {
-            InternalContainer._global = new Registry();
-        }
+
         this._parent = parent;
     }
 
-    get global() {
-        return InternalContainer._global;
+    public get global(): Registry {
+        if (!InternalContainer._global) {
+            InternalContainer._global = new Registry();
+        }
+        return InternalContainer._global
     }
 
     register<T>(token: Token<T>, provider: Provider<T>): Container;
-    register<T>(token: Token<T>, provider: ClassProvider<T>): Container;
     register<T>(token: Token<T>, provider: FactoryProvider<T>): Container;
     register<T>(token: Token<T>, provider: TokenProvider<T>): Container;
     register<T>(token: Token<T>, provider: ValueProvider<T>): Container;
+    register<T>(token: Token<T>, provider: ClassProvider<T>, options?: RegistrationOptions): Container;
     register<T>(
         token: Token<T>,
         constructorOrProvider: Provider<T> | Constructor<T>,
@@ -93,21 +98,32 @@ export class InternalContainer implements Container {
         return this;
     }
 
-    registerAll(registers: [Token<any>, Provider<any>][]): InternalContainer {
+    public registerAll(registers: [Token<any>, Provider<any>][]): InternalContainer {
         throw new Error("Method not implemented.");
     }
 
-    resolve<T>(token: Token<T>): T {
+    public resolve<T>(token: Token<T>): T {
         console.log("---start resolve---")
+
         const registration = this.registry.get(token as Token<T>)
-        // TODO: Transientで見つからないならグローバルregistyからも取得する
         console.log("registration is exists?", registration ? "yes" : "no")
-        if (!registration) {
+
+        if (!registration && isNormalToken(token)) {
             throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
         }
-        const resolvedRegistration = this.resolveRegistration(registration);
-        console.log("---end resolve---")
-        return resolvedRegistration;
+
+        if (registration) {
+            const resolvedRegistration = this.resolveRegistration(registration);
+            return resolvedRegistration
+        }
+
+        if (isConstructorToken(token)) {
+            const result = this.construct(token as Constructor<T>)
+            return result
+        }
+
+        throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
+
     }
 
     public resolveRegistration<T>(registration: Registration<T>): T {
