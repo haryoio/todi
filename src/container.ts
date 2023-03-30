@@ -103,10 +103,8 @@ export class InternalContainer implements Container {
     }
 
     public resolve<T>(token: Token<T>): T {
-        console.log("---start resolve---")
 
         const registration = this.registry.get(token as Token<T>)
-        console.log("registration is exists?", registration ? "yes" : "no")
 
         if (!registration && isNormalToken(token)) {
             throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
@@ -118,8 +116,8 @@ export class InternalContainer implements Container {
         }
 
         if (isConstructorToken(token)) {
-            const result = this.construct(token as Constructor<T>)
-            return result
+            const constructed = this.construct(token as Constructor<T>)
+            return constructed
         }
 
         throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
@@ -135,71 +133,48 @@ export class InternalContainer implements Container {
         const isScoped = registration.options?.lifetime === LIFETIME.Scoped
         const returnInstance = isSingleton || isScoped
 
-
-        let resolved: T;
-
-        console.log(provider, options)
-
         if (isClassProvider(provider)) {
-            console.log("isClassProvider")
             // クラスならインスタンス化する.
             const { useClass } = provider as ClassProvider<T>;
-            console.log(registration)
-            console.log("useClass is exists?", useClass ? "yes" : "no")
-            console.log(useClass);
-            resolved = returnInstance ?
+
+            const resolved = returnInstance ?
                 registration.instance || (registration.instance = this.construct(useClass)) :
                 this.construct(useClass)
-            if (options?.lifetime === "singleton") {
-                this.global.set(useClass as Token<any>, { provider, options, instance: resolved })
-            }
-        } else if (isTokenProvider(provider)) {
-            console.log("isTokenProvider")
+
+            return resolved
+        }
+        if (isTokenProvider(provider)) {
             // トークンなら再度解決する
-            const { useToken } = provider as TokenProvider<T>;
-            resolved = this.resolve(useToken)
-        } else if (isFactoryProvider(provider)) {
-            console.log("isFactoryProvider")
+            const { useToken } = provider as TokenProvider<T>
+            return this.resolve(useToken)
+        }
+        if (isFactoryProvider(provider)) {
             // ファクトリなら自身を引数に渡して実行する
             const { useFactory } = provider as FactoryProvider<T>;
-            resolved = useFactory(this)
-            if (options?.lifetime === "singleton") {
-                this.global.set(useFactory as Token<any>, { provider, options, instance: resolved })
-            }
-        } else if (isValueProvider(provider)) {
-            console.log("isValueProvider")
+            const resolved = useFactory(this)
+            return resolved
+        }
+        if (isValueProvider(provider)) {
             // 値ならそのまま返す
             const { useValue } = provider as ValueProvider<T>;
-            resolved = useValue
+            return useValue
         } else {
-            resolved = provider as T
+            return provider as T
         }
-
-        console.log("resolved", resolved)
-
-        return resolved;
     }
 
     private construct<T>(
         newable: Constructor<T>
     ): T {
         const parameterTypes = Reflect.getMetadata("design:paramtypes", newable)
-        console.log("construct", parameterTypes)
 
         const instance = (() => {
-            console.log("parameterTypes", parameterTypes);
             if (typeof parameterTypes === "undefined" || !parameterTypes) {
-                console.log("new without args")
                 return new newable()
             } else {
                 const args = parameterTypes.map((paramType: Token<any>) => {
-                    console.log("construct args: ", paramType)
-                    const res = this.resolve(paramType)
-                    console.log(res)
-                    return res
+                    return this.resolve(paramType)
                 })
-                console.log("args", args)
-                console.log("new with args")
                 return new newable(...args)
             }
         })()
