@@ -1,4 +1,4 @@
-import { assertEquals, assertThrows } from "../deps.ts";
+import { assertEquals, assertNotEquals } from "../deps.ts";
 import { container, InternalContainer, createContainer } from "@/container.ts";
 import { Injectable, Inject, Singleton, Register } from "@/decorator.ts";
 import { Token } from "@/interfaces/token.ts";
@@ -212,3 +212,27 @@ Deno.test("Child container resolves dependencies from parent container", () => {
     assertEquals(parentA instanceof Parent, true);
     assertEquals(childA instanceof Child, true);
 });
+
+
+Deno.test("reset container", () => {
+    const container = createContainer()
+
+    @Injectable()
+    class Test {
+        value = "test"
+    }
+    container.register<Test>("Test", { useClass: Test })
+
+    const testInstanceBeforeReset = container.resolve<Test>("Test")
+    assertEquals(testInstanceBeforeReset.value, "test")
+
+    container.reset()
+
+    try {
+        container.resolve<Test>("Test")
+        throw new Error("Expected on error due to unregistered token")
+    } catch (error) {
+        assertEquals(error.message, "No registration found for token: Test")
+    }
+})
+

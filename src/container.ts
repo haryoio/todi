@@ -136,7 +136,7 @@ export class InternalContainer implements Container {
 
 
     // 登録情報(Registration)を解決し,インスタンスを取得
-    public resolveRegistration<T>(registration: Registration<T>): T {
+    private resolveRegistration<T>(registration: Registration<T>): T {
         this.ensureNotDisposed()
 
         const { provider, options } = registration;
@@ -245,6 +245,13 @@ export class InternalContainer implements Container {
         return undefined
 
     }
+
+    public reset(): void {
+        this.dispose()
+        this.registry.clear()
+        this.global.clear()
+    }
+
 
     // コンテナ内のすべての破棄可能オブジェクトを再帰的に破棄する
     public async dispose(): Promise<void> {

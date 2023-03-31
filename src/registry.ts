@@ -7,6 +7,10 @@ export default abstract class RegistryBase<T> {
         return this._registryMap.entries();
     }
 
+    public forEach(callbackfn: (value: T[], key: Token<any>, map: Map<Token<any>, T[]>) => void, thisArg?: any): void {
+        this._registryMap.forEach(callbackfn, thisArg);
+    }
+
     public getAll(key: Token<any>): T[] {
         this.ensure(key);
         return this._registryMap.get(key)!;
