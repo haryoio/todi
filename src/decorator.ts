@@ -8,7 +8,7 @@ import {
     DEPENDENCIES_METADATA_KEY
 } from "./interfaces/reflect.ts"
 import { InjectableOptions, RegistrationOptions } from "./interfaces/registration.ts";
-import container from './container.ts';
+import { container } from './container.ts';
 import { LIFETIME } from "./interfaces/lifetime.ts";
 
 

@@ -254,6 +254,5 @@ export class InternalContainer implements Container {
 }
 
 
-const container = new InternalContainer();
+export const container = new InternalContainer();
 
-export default container;

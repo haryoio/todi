@@ -1,6 +1,4 @@
-import { Reflect } from "./deps.ts";
-import { container, Injectable } from "./src/mod.ts";
-import { Inject } from "./src/decorators.ts";
+import { container, Inject, Injectable } from "./mod.ts";
 
 interface UserService {
   getUser(id: string): string;
