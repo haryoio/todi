@@ -10,25 +10,15 @@ import {
 import { InjectableOptions, RegistrationOptions } from "./interfaces/registration.ts";
 import container from './container.ts';
 import { LIFETIME } from "./interfaces/lifetime.ts";
-import { ClassProvider } from './interfaces/provider.ts';
 
-export function Injectable<T>(
-    options: InjectableOptions = {}
-): (target: Constructor<T>) => void {
+
+export function Injectable<T>(): (target: Constructor<T>) => void {
     return (target: Constructor<T>) => {
 
         // パラメータの型情報を取得
         const params: any[] = Reflect.getMetadata("design:paramtypes", target) || []
 
         // パラメータに付与されたトークン情報を取得
-        const token: Token<T> = options.token || target
-        container.register(
-            token, {
-            useClass: target,
-        }, options)
-        console.log("@Injectable tokens: ", target)
-        Reflect.defineMetadata(INJECTABLE_METADATA_KEY, params, target)
-
         const tokens: Dictionary<Token<any>> = Reflect.getOwnMetadata(
             TARGET_TYPE_METADATA_KEY, target) || {}
 
@@ -38,7 +28,7 @@ export function Injectable<T>(
         })
         console.log(`@Injectable: target: ${target}, params: ${params}`)
 
-        // パラメータの型情報をグローバルに保存
+        // パラメータの型情報を保存
         typeInfo.set(target, params)
     }
 }
@@ -60,9 +50,9 @@ export function Inject(
         // tsyringe
         const descriptors: Dictionary<Token<any>> = Reflect.getOwnMetadata(TARGET_TYPE_METADATA_KEY, target) ||
             {};
+
         descriptors[idx] = token;
         Reflect.defineMetadata(TARGET_TYPE_METADATA_KEY, descriptors, target);
-
     };
 }
 
@@ -76,7 +66,24 @@ export function GlobalRegister<T>(token: Token<T>) {
 }
 
 export function Singleton<T>() {
-    return function (target: Constructor<T>) {
-        Injectable({ lifetime: LIFETIME.Singleton })(target)
+    return (target: Constructor<T>) => {
+        Reflect.defineMetadata("di:singleton", "ok", target)
+
+        // パラメータの型情報を取得
+        const params: any[] = Reflect.getMetadata("design:paramtypes", target) || []
+
+        // パラメータに付与されたトークン情報を取得
+        const tokens: Dictionary<Token<any>> = Reflect.getOwnMetadata(
+            TARGET_TYPE_METADATA_KEY, target) || {}
+
+        // パラメータに付与されたトークン情報をパラメータの型情報にマージ
+        Object.keys(tokens).forEach(key => {
+            params[+key] = tokens[key]
+        })
+        // console.log(`@Injectable: target: ${target}, params: ${params}`)
+
+        // パラメータの型情報を保存
+        typeInfo.set(target, params)
+
     }
 }
