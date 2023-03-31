@@ -115,8 +115,10 @@ export class InternalContainer implements Container {
 
         const registration = this.registry.get(token as Token<T>)
 
-        if (!registration && isNormalToken(token)) {
-            throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
+        if (!registration) {
+            if (isNormalToken(token)) {
+                throw new Error(ERROR_MESSAGE.REGISTRATION_NOT_FOUND(token));
+            }
         }
 
         if (registration) {
@@ -220,14 +222,28 @@ export class InternalContainer implements Container {
         return instance
     }
 
-    createChildren(): InternalContainer {
-        throw new Error("Method not implemented.");
+    public createChildContainer(): InternalContainer {
+        return new InternalContainer(this);
     }
+
     getDependency<T>(token: Token<T>): T {
         throw new Error("Method not implemented.");
     }
+
     getParent(): InternalContainer | undefined {
-        throw new Error("Method not implemented.");
+        return this._parent
+    }
+
+    getRegistration<T>(token: Token<T>): Registration<T> | undefined {
+        const registration = this.registry.get(token)
+        if (registration) {
+            return registration
+        }
+        if (this._parent) {
+            return this._parent.getRegistration(token)
+        }
+        return undefined
+
     }
 
     // コンテナ内のすべての破棄可能オブジェクトを再帰的に破棄する
@@ -256,3 +272,6 @@ export class InternalContainer implements Container {
 
 export const container = new InternalContainer();
 
+export function createContainer(): InternalContainer {
+    return new InternalContainer();
+}

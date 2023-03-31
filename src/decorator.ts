@@ -1,35 +1,33 @@
-import { typeInfo } from "./container.ts";
+import { InternalContainer, typeInfo } from "./container.ts";
 import { Constructor, Token } from "./interfaces/token.ts";
 import { Reflect } from "./reflect.ts";
 import { Dictionary } from "./type.ts";
 import {
-    INJECTABLE_METADATA_KEY,
     TARGET_TYPE_METADATA_KEY,
     DEPENDENCIES_METADATA_KEY
 } from "./interfaces/reflect.ts"
-import { InjectableOptions, RegistrationOptions } from "./interfaces/registration.ts";
-import { container } from './container.ts';
+import { container as globalContainer } from './container.ts';
 import { LIFETIME } from "./interfaces/lifetime.ts";
 
 
+function setTypeInfo(target: Constructor<any>, tokens: Dictionary<Token<any>>) {
+    const params: any[] = Reflect.getMetadata("design:paramtypes", target) || [];
+
+    Object.keys(tokens).forEach(key => {
+        params[+key] = tokens[key];
+    });
+
+    typeInfo.set(target, params);
+}
+
 export function Injectable<T>(): (target: Constructor<T>) => void {
     return (target: Constructor<T>) => {
-
-        // パラメータの型情報を取得
-        const params: any[] = Reflect.getMetadata("design:paramtypes", target) || []
-
         // パラメータに付与されたトークン情報を取得
         const tokens: Dictionary<Token<any>> = Reflect.getOwnMetadata(
             TARGET_TYPE_METADATA_KEY, target) || {}
 
-        // パラメータに付与されたトークン情報をパラメータの型情報にマージ
-        Object.keys(tokens).forEach(key => {
-            params[+key] = tokens[key]
-        })
-        console.log(`@Injectable: target: ${target}, params: ${params}`)
+        setTypeInfo(target, tokens)
 
-        // パラメータの型情報を保存
-        typeInfo.set(target, params)
     }
 }
 
@@ -41,15 +39,12 @@ export function Inject(
         _key: string | symbol,
         idx: number,
     ): any => {
-        // injectly
-        const dependencies = Reflect.getMetadata(DEPENDENCIES_METADATA_KEY, target.constructor) || {}
-        dependencies[idx as number] = token
+        const dependencies = Reflect.getMetadata(DEPENDENCIES_METADATA_KEY, target.constructor) || {};
+        dependencies[idx as number] = token;
 
-        Reflect.defineMetadata(DEPENDENCIES_METADATA_KEY, dependencies, target.constructor)
+        Reflect.defineMetadata(DEPENDENCIES_METADATA_KEY, dependencies, target.constructor);
 
-        // tsyringe
-        const descriptors: Dictionary<Token<any>> = Reflect.getOwnMetadata(TARGET_TYPE_METADATA_KEY, target) ||
-            {};
+        const descriptors: Dictionary<Token<any>> = Reflect.getOwnMetadata(TARGET_TYPE_METADATA_KEY, target) || {};
 
         descriptors[idx] = token;
         Reflect.defineMetadata(TARGET_TYPE_METADATA_KEY, descriptors, target);
@@ -61,29 +56,26 @@ export function GlobalRegister<T>(token: Token<T>) {
         const provider = {
             useClass: target,
         }
-        container.register(token, provider, { lifetime: LIFETIME.Singleton })
+        globalContainer.register(token, provider, { lifetime: LIFETIME.Singleton })
     }
 }
 
 export function Singleton<T>() {
     return (target: Constructor<T>) => {
-        Reflect.defineMetadata("di:singleton", "ok", target)
 
-        // パラメータの型情報を取得
-        const params: any[] = Reflect.getMetadata("design:paramtypes", target) || []
+        // シングルトンであることをメタデータに付与
+        Reflect.defineMetadata("di:singleton", true, target);
 
-        // パラメータに付与されたトークン情報を取得
-        const tokens: Dictionary<Token<any>> = Reflect.getOwnMetadata(
-            TARGET_TYPE_METADATA_KEY, target) || {}
+        const tokens: Dictionary<Token<any>> = Reflect.getOwnMetadata(TARGET_TYPE_METADATA_KEY, target) || {};
+        setTypeInfo(target, tokens);
+    }
+}
 
-        // パラメータに付与されたトークン情報をパラメータの型情報にマージ
-        Object.keys(tokens).forEach(key => {
-            params[+key] = tokens[key]
-        })
-        // console.log(`@Injectable: target: ${target}, params: ${params}`)
-
-        // パラメータの型情報を保存
-        typeInfo.set(target, params)
-
+export function Register<T>(token: Token<T>, container: InternalContainer = globalContainer) {
+    return (target: Constructor<T>) => {
+        const provider = {
+            useClass: target,
+        }
+        container.register(token, provider)
     }
 }

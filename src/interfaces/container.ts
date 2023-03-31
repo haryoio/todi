@@ -21,7 +21,7 @@ export interface Container extends Disposable {
 
     resolve<T>(token: Token<T>): T
 
-    createChildren(): Container
+    createChildContainer(): Container
 
     getDependency<T>(token: Token<T>): T
     getParent(): Container | undefined

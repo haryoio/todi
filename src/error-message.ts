@@ -6,6 +6,7 @@ export const ERROR_MESSAGE = {
 
     INVALID_PROVIDER: (provider: any) => `Invalid provider: ${provider.toString()}`
     ,
-    DISPOSED_CONTAINER: `Container is disposed.`
+    DISPOSED_CONTAINER: `Container is disposed.`,
+    CIRCULAR_DEPENDENCY: (token: Token<any>) => `Circular dependency detected for token: ${token.toString()}`,
 }
 
