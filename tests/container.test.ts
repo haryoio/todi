@@ -1,7 +1,7 @@
 import { assertEquals, assertNotEquals } from "../deps.ts";
-import { container, InternalContainer, createContainer } from "@/container.ts";
-import { Injectable, Inject, Singleton, Register } from "@/decorator.ts";
-import { Token } from "@/interfaces/token.ts";
+import { container, InternalContainer, createContainer } from "../src/container.ts";
+import { Injectable, Inject, Singleton, Register } from "../src/decorator.ts";
+import { Token } from "../src/interfaces/token.ts";
 
 Deno.test("Class provider registration and resolution", () => {
     const container = new InternalContainer();

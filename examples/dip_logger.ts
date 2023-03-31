@@ -1,5 +1,4 @@
-import { container, Injectable, Inject } from "../mod.ts"
-
+import { container, Injectable, Inject } from 'https://raw.githubusercontent.com/haryoio/todi/main/mod.ts';
 
 interface Logger {
     log(message: string): void;

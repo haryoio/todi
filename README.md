@@ -8,7 +8,7 @@ TSyringeを参考にしています.
 1. containerをインポートする.
 
 ```typescript
-import { container } from 'https://raw.githubusercontent.com/haryoio/todi/main/container.ts';
+import { container } from 'https://raw.githubusercontent.com/haryoio/todi/main/mod.ts';
 ```
 
 2. 注入したいクラスを定義する.

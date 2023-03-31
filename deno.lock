@@ -1,27 +1,7 @@
 {
   "version": "2",
   "remote": {
-    "https://deno.land/std@0.181.0/fmt/colors.ts": "d67e3cd9f472535241a8e410d33423980bec45047e343577554d3356e1f0ef4e",
-    "https://deno.land/std@0.181.0/testing/_diff.ts": "1a3c044aedf77647d6cac86b798c6417603361b66b54c53331b312caeb447aea",
-    "https://deno.land/std@0.181.0/testing/_format.ts": "a69126e8a469009adf4cf2a50af889aca364c349797e63174884a52ff75cf4c7",
-    "https://deno.land/std@0.181.0/testing/asserts.ts": "e16d98b4d73ffc4ed498d717307a12500ae4f2cbe668f1a215632d19fcffc22f",
     "https://deno.land/x/reflect_metadata@v0.1.12/Reflect.ts": "eced7b7e642853c6fb9a209f96ddd1932ab1e0fc3c514705c87d56169c8fe260",
     "https://deno.land/x/reflect_metadata@v0.1.12/mod.ts": "8b5e3b20f1e604c118df433e84a409b1d5116e885001047134cc42ecf84fa2cd"
-  },
-  "npm": {
-    "specifiers": {
-      "typechecker": "typechecker@7.18.0",
-      "typescript": "typescript@5.0.2"
-    },
-    "packages": {
-      "typechecker@7.18.0": {
-        "integrity": "sha512-GjwqmuBuIQOvy0VsuMyjxur1hop/mLgKby61izt4UpT3Knm/7qzXAxpQHVhLK7bgmZjIj9GtIBmh1FMnyEDVBw==",
-        "dependencies": {}
-      },
-      "typescript@5.0.2": {
-        "integrity": "sha512-wVORMBGO/FAs/++blGNeAVdbNKtIh1rbBL2EyQ1+J9lClJ93KiiKe8PmFIVdXhHcyv44SL9oglmfeSsndo0jRw==",
-        "dependencies": {}
-      }
-    }
   }
 }

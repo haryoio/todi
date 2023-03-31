@@ -27,19 +27,19 @@ class CreditCardPaymentProcessor implements PaymentProcessor {
 }
 
 
-import { Token } from "@/interfaces/token.ts"
+import { Token } from "../src/interfaces/token.ts"
 
 const ShoppingCartToken = Symbol("ShoppingCart") as Token<ShoppingCart>;
 const PaymentProcessorToken = Symbol("PaymentProcessor") as Token<PaymentProcessor>;
 
-import { createContainer } from "@/container.ts"
+import { createContainer } from "../src/container.ts"
 
 const container = createContainer();
 
 container.register<ShoppingCart>(ShoppingCartToken, { useClass: BasicShoppingCart })
 container.register<PaymentProcessor>(PaymentProcessorToken, { useClass: CreditCardPaymentProcessor })
 
-import { Inject, Injectable } from "@/decorator.ts"
+import { Inject, Injectable } from "../src/decorator.ts"
 
 @Injectable()
 class Store {
