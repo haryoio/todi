@@ -1,13 +1,13 @@
-# Injectly - A DI Container for TypeScript
+# todi - A DI Container for TypeScript
 
-InjectlyはDeno向けのシンプルで軽量な依存性注入(DI)コンテナライブラリです.
+todiはDeno向けのシンプルな依存性注入(DI)コンテナライブラリです.
 
 ## 使い方
 
 1. containerをインポートする.
 
 ```typescript
-import { container } from 'https://raw.githubusercontent.com/haryoio/injectly/main/container.ts';
+import { container } from 'https://raw.githubusercontent.com/haryoio/todi/main/container.ts';
 ```
 
 2. 注入したいクラスを定義する.
