@@ -20,15 +20,13 @@ type ParamInfo = Token<any>
 export const typeInfo = new WeakMap<Constructor<any>, ParamInfo[]>();
 
 export class InternalContainer implements Container {
-    static global() {
-        throw new Error("Method not implemented.");
-    }
     private _parent?: InternalContainer;
     private _disposed = false;
 
     private registry: Registry
     private static _global: Registry
 
+    // 破棄されるオブジェクトを保持するためのSet
     private disposeables: Set<Disposable> = new Set();
 
     constructor(
@@ -39,6 +37,7 @@ export class InternalContainer implements Container {
         this._parent = parent;
     }
 
+    // グローバルregistryを返す
     public get global(): Registry {
         if (!InternalContainer._global) {
             InternalContainer._global = new Registry();
@@ -46,6 +45,8 @@ export class InternalContainer implements Container {
         return InternalContainer._global
     }
 
+    // トークン&プロバイダを登録
+    // プロバイダの型ごとにオーバーロード
     register<T>(token: Token<T>, provider: Provider<T>): Container;
     register<T>(token: Token<T>, provider: FactoryProvider<T>): Container;
     register<T>(token: Token<T>, provider: TokenProvider<T>): Container;
@@ -68,7 +69,6 @@ export class InternalContainer implements Container {
         } else {
             provider = { useClass: constructorOrProvider as Constructor<T> };
         }
-
 
         if (isTokenProvider(provider)) {
             const path = [token];
@@ -95,13 +95,22 @@ export class InternalContainer implements Container {
         }
 
         this.registry.set(token, { provider, options });
+
         return this;
     }
 
+    // 一度に複数のトークン&プロバイダを登録
+    // すべてTransientなスコープとなる.
     public registerAll(registers: [Token<any>, Provider<any>][]): InternalContainer {
-        throw new Error("Method not implemented.");
+
+        registers.forEach(([token, provider]) => {
+            this.register(token, provider);
+        });
+
+        return this;
     }
 
+    // トークンを解決し,インスタンスを取得
     public resolve<T>(token: Token<T>): T {
 
         const registration = this.registry.get(token as Token<T>)
@@ -111,8 +120,7 @@ export class InternalContainer implements Container {
         }
 
         if (registration) {
-            const resolvedRegistration = this.resolveRegistration(registration);
-            return resolvedRegistration
+            return this.resolveRegistration(registration);
         }
 
         if (isConstructorToken(token)) {
@@ -124,13 +132,16 @@ export class InternalContainer implements Container {
 
     }
 
+
+    // 登録情報(Registration)を解決し,インスタンスを取得
     public resolveRegistration<T>(registration: Registration<T>): T {
         this.ensureNotDisposed()
 
         const { provider, options } = registration;
 
-        const isSingleton = registration.options?.lifetime === LIFETIME.Singleton
-        const isScoped = registration.options?.lifetime === LIFETIME.Scoped
+
+        const isSingleton = options?.lifetime === LIFETIME.Singleton
+        const isScoped = options?.lifetime === LIFETIME.Scoped
         const returnInstance = isSingleton || isScoped
 
         if (isClassProvider(provider)) {
@@ -142,6 +153,7 @@ export class InternalContainer implements Container {
                 this.construct(useClass)
 
             return resolved
+
         }
         if (isTokenProvider(provider)) {
             // トークンなら再度解決する
@@ -163,21 +175,48 @@ export class InternalContainer implements Container {
         }
     }
 
+    // コンストラクタよりインスタンスを生成
+    // シングルトンならグローバルにインスタンスを登録し,常にそれを返す.
     private construct<T>(
         newable: Constructor<T>
     ): T {
         const parameterTypes = Reflect.getMetadata("design:paramtypes", newable)
+        // @Singleton()により付与されるメタデータ
+        const isSingleton = Reflect.getMetadata("di:singleton", newable)
 
         const instance = (() => {
+            // シングルトンならインスタンスを返す
+            if (isSingleton) {
+                const registration = this.global.get(newable)
+                // グローバルにインスタンスがあればそれを返す
+                if (registration && registration.instance) {
+                    return registration.instance
+                }
+            }
+            // これ以上DIがなければパラメータなしでインスタンス化
             if (typeof parameterTypes === "undefined" || !parameterTypes) {
                 return new newable()
             } else {
+                // DIがあればそれを解決してインスタンス化
                 const args = parameterTypes.map((paramType: Token<any>) => {
                     return this.resolve(paramType)
                 })
                 return new newable(...args)
             }
         })()
+
+        if (isSingleton) {
+            const registration = this.global.get(newable)
+            // グローバルにインスタンスがなければ登録する
+            if (registration && !registration.instance) {
+                registration.instance = instance
+            }
+            // グローバルに登録がなければインスタンスとともに登録する
+            else {
+                this.global.set(newable, { provider: { useClass: newable }, instance })
+            }
+        }
+
         return instance
     }
 
@@ -191,6 +230,7 @@ export class InternalContainer implements Container {
         throw new Error("Method not implemented.");
     }
 
+    // コンテナ内のすべての破棄可能オブジェクトを再帰的に破棄する
     public async dispose(): Promise<void> {
         this._disposed = true;
         const promises: Promise<unknown>[] = [];
@@ -202,7 +242,6 @@ export class InternalContainer implements Container {
                 promises.push(result);
             }
         })
-
 
         await Promise.all(promises)
     }
