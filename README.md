@@ -1,6 +1,7 @@
 # todi - A DI Container for TypeScript
 
 todiはDeno向けのシンプルな依存性注入(DI)コンテナライブラリです.
+TSyringeを参考にしています.
 
 ## 使い方
 
