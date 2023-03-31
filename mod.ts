@@ -1,10 +1,10 @@
-import { Container, Disposable } from "@/interfaces/container.ts"
-import { RegistrationOptions, Registration } from "@/interfaces/registration.ts";
-import { Constructor, Token } from "@/interfaces/token.ts";
-import { Registry } from "@/registry.ts";
-import { InternalContainer, container, createContainer } from "@/container.ts";
-import { Injectable, Inject, GlobalRegister, Singleton, Register } from "@/decorator.ts";
-import { Provider } from "@/interfaces/provider.ts";
+import { Container, Disposable } from "./src/interfaces/container.ts"
+import { RegistrationOptions, Registration } from "./src/interfaces/registration.ts";
+import { Constructor, Token } from "./src/interfaces/token.ts";
+import { Registry } from "./src/registry.ts";
+import { InternalContainer, container, createContainer } from "./src/container.ts";
+import { Injectable, Inject, GlobalRegister, Singleton, Register } from "./src/decorator.ts";
+import { Provider } from "./src/interfaces/provider.ts";
 
 export {
     Registry,
